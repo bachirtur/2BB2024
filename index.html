@@ -1,0 +1,1470 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Évaluation interactive - BAC BLANC 2024 NSI</title>
+  <meta name="description" content="Application locale d'évaluation interactive avec correction, minuterie, sauvegarde et journal anti-fraude." />
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:#111a2e;
+      --panel-2:#17233d;
+      --soft:#202f52;
+      --line:#2e416d;
+      --text:#edf3ff;
+      --muted:#9fb0d3;
+      --accent:#4f8cff;
+      --accent-2:#66d1ff;
+      --success:#1fbf75;
+      --warning:#ffb020;
+      --danger:#ff5d73;
+      --shadow:0 10px 30px rgba(0,0,0,.28);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:linear-gradient(180deg,#09101d,#0e1730 35%,#0b1220);color:var(--text);font-family:Inter,Segoe UI,Roboto,Arial,sans-serif}
+    body.no-select{
+      -webkit-user-select:none;
+      user-select:none;
+    }
+    a{color:var(--accent-2)}
+    button,input,textarea,select{font:inherit}
+    .app{min-height:100vh}
+    .hidden{display:none!important}
+    .screen{min-height:100vh;padding:24px}
+    .card{
+      background:rgba(17,26,46,.96);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(8px);
+    }
+    .hero{
+      max-width:980px;margin:30px auto;padding:28px;
+    }
+    .hero h1{margin:0 0 8px;font-size:2rem}
+    .hero p{margin:0;color:var(--muted);line-height:1.6}
+    .grid{display:grid;gap:18px}
+    .grid-2{grid-template-columns:1fr 1fr}
+    @media (max-width: 860px){.grid-2{grid-template-columns:1fr}}
+    .field{display:flex;flex-direction:column;gap:8px}
+    .field label{font-weight:600}
+    .field input,.field textarea,.field select{
+      width:100%;padding:14px 16px;border-radius:14px;border:1px solid var(--line);
+      background:#0c1528;color:var(--text);outline:none;
+    }
+    .field input:focus,.field textarea:focus,.field select:focus{
+      border-color:var(--accent);box-shadow:0 0 0 4px rgba(79,140,255,.16);
+    }
+    .start-box{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;margin-top:20px}
+    .meta{
+      color:var(--muted);font-size:.95rem;
+    }
+    .btn{
+      border:none;border-radius:14px;padding:14px 18px;cursor:pointer;font-weight:700;
+      transition:.2s transform,.2s opacity,.2s background;
+    }
+    .btn:hover{transform:translateY(-1px)}
+    .btn-primary{background:linear-gradient(135deg,var(--accent),#6ca0ff);color:white}
+    .btn-secondary{background:var(--soft);color:var(--text);border:1px solid var(--line)}
+    .btn-danger{background:linear-gradient(135deg,var(--danger),#ff7f92);color:white}
+    .btn-success{background:linear-gradient(135deg,var(--success),#42d796);color:white}
+    .exam-layout{display:grid;grid-template-columns:300px 1fr;gap:18px;max-width:1500px;margin:0 auto;padding:16px}
+    @media (max-width:1050px){.exam-layout{grid-template-columns:1fr}}
+    .sidebar{padding:16px;position:sticky;top:16px;height:fit-content}
+    .title-block h2{margin:0 0 8px;font-size:1.2rem}
+    .small{font-size:.92rem;color:var(--muted)}
+    .identity{
+      margin-top:18px;padding:14px;border-radius:14px;background:#0d162a;border:1px solid var(--line)
+    }
+    .timer{
+      display:flex;justify-content:space-between;align-items:center;gap:12px;
+      padding:14px 16px;border-radius:14px;background:linear-gradient(135deg,#14213d,#11294e);
+      border:1px solid var(--line);margin:14px 0;
+    }
+    .timer strong{font-size:1.08rem}
+    .progress{
+      width:100%;height:10px;background:#0c1528;border-radius:999px;overflow:hidden;border:1px solid var(--line)
+    }
+    .progress>span{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2));width:0%}
+    .exercise-list{margin-top:16px;display:flex;flex-direction:column;gap:10px}
+    .exercise-btn{
+      width:100%;text-align:left;padding:12px 14px;background:#0d162a;border:1px solid var(--line);
+      color:var(--text);border-radius:12px;cursor:pointer
+    }
+    .exercise-btn.active{background:linear-gradient(135deg,#173259,#1f467f);border-color:#5e8fd9}
+    .content{padding:18px}
+    .topbar{
+      display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:18px
+    }
+    .question-card{
+      padding:20px;border-radius:18px;background:linear-gradient(180deg,#111b31,#0d1629);
+      border:1px solid rgba(255,255,255,.08);margin-bottom:18px
+    }
+    .question-header{
+      display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:12px
+    }
+    .badge{
+      display:inline-flex;align-items:center;gap:8px;padding:7px 11px;border-radius:999px;
+      background:#10203f;border:1px solid var(--line);color:#d9e6ff;font-size:.9rem;font-weight:700
+    }
+    .statement{line-height:1.72;color:#edf3ff}
+    .statement pre, .codebox{
+      background:#0a1222;border:1px solid var(--line);padding:14px;border-radius:14px;overflow:auto
+    }
+    .statement code{font-family:Consolas, monospace}
+    textarea.answer{
+      min-height:160px;resize:vertical
+    }
+    .code-editor{
+      position:relative;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#0a1222
+    }
+    .code-editor .fake-toolbar{
+      padding:10px 12px;background:#0d1730;border-bottom:1px solid var(--line);color:var(--muted);font-size:.9rem
+    }
+    .code-editor textarea{
+      width:100%;min-height:220px;padding:14px 14px 14px 54px;border:none;outline:none;
+      background:
+        linear-gradient(#0a1222,#0a1222) padding-box,
+        repeating-linear-gradient(transparent,transparent 24px,rgba(255,255,255,.03) 24px,rgba(255,255,255,.03) 25px);
+      color:#e8f0ff;font-family:Consolas, Monaco, "Courier New", monospace;line-height:25px;tab-size:4;resize:vertical
+    }
+    .line-numbers{
+      position:absolute;left:0;top:43px;bottom:0;width:42px;padding:14px 6px;background:#0a1120;border-right:1px solid var(--line);
+      color:#6f83ae;font-family:Consolas, monospace;font-size:.92rem;line-height:25px;text-align:right;overflow:hidden
+    }
+    .nav-controls{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:18px}
+    .result-box{
+      margin-top:12px;padding:14px;border-radius:14px;background:#0d162a;border:1px solid var(--line)
+    }
+    .ok{color:#63e6a9;font-weight:700}
+    .ko{color:#ff8596;font-weight:700}
+    .warn{color:#ffd166;font-weight:700}
+    .table-wrap{overflow:auto}
+    table{
+      width:100%;border-collapse:collapse;margin:10px 0;background:#0a1222;border-radius:12px;overflow:hidden
+    }
+    th,td{border:1px solid var(--line);padding:10px 12px;text-align:left}
+    th{background:#11203d}
+    img.figure{
+      max-width:100%;height:auto;border-radius:14px;border:1px solid var(--line);background:white;cursor:zoom-in;
+      box-shadow:0 10px 20px rgba(0,0,0,.2);image-rendering:auto;filter:contrast(1.05) saturate(1.02) sharpen(1)
+    }
+    .figure-caption{color:var(--muted);font-size:.9rem;margin-top:8px}
+    .modal{
+      position:fixed;inset:0;background:rgba(3,8,20,.78);display:flex;justify-content:center;align-items:center;padding:20px;z-index:3000
+    }
+    .modal-content{
+      max-width:95vw;max-height:92vh;position:relative
+    }
+    .modal-content img{
+      max-width:100%;max-height:92vh;border-radius:16px;border:2px solid rgba(255,255,255,.2);background:white
+    }
+    .close-modal{
+      position:absolute;top:-12px;right:-12px;width:42px;height:42px;border-radius:50%;border:none;background:white;color:#111;font-size:1.2rem;cursor:pointer
+    }
+    .final-screen{max-width:1200px;margin:20px auto;padding:22px}
+    .score-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+    @media (max-width:860px){.score-grid{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:520px){.score-grid{grid-template-columns:1fr}}
+    .score-card{padding:16px;border-radius:16px;background:#0d162a;border:1px solid var(--line)}
+    .anti-log li{margin:8px 0;color:#dce7ff}
+    .sticky-actions{
+      position:sticky;bottom:0;background:linear-gradient(180deg,rgba(11,18,32,.1),rgba(11,18,32,.95));padding-top:16px
+    }
+    .footer-actions{display:flex;gap:10px;flex-wrap:wrap}
+    .overlay-alert{
+      position:fixed;right:18px;bottom:18px;z-index:4000;display:flex;flex-direction:column;gap:10px
+    }
+    .toast{
+      background:#121d33;border:1px solid var(--line);border-left:5px solid var(--warning);
+      color:var(--text);padding:12px 14px;border-radius:12px;box-shadow:var(--shadow);min-width:280px
+    }
+    .readonly-overlay{
+      position:absolute;inset:0;background:rgba(8,12,20,.35);pointer-events:none
+    }
+    .legal{
+      margin-top:14px;padding:12px 14px;border-left:4px solid var(--warning);background:#1d1a10;color:#ffe9aa;border-radius:10px
+    }
+  </style>
+</head>
+<body class="no-select">
+  <div class="app">
+
+    <section id="welcomeScreen" class="screen">
+      <div class="hero card">
+        <h1>Évaluation interactive professionnelle</h1>
+        <p>
+          BACCALAURÉAT GÉNÉRAL – ÉPREUVE D’ENSEIGNEMENT DE SPÉCIALITÉ – BAC BLANC 2024 – NSI.
+          Cette application fonctionne en local, sans serveur, avec sauvegarde automatique, minuterie,
+          navigation par exercices, correction intégrée et journal anti-fraude.
+        </p>
+
+        <div class="legal">
+          Mode local : certaines protections anti-triche côté navigateur ne peuvent pas garantir une sécurité absolue.
+          Elles constituent une dissuasion et un journal d’incidents. Le blocage complet du système d’exploitation n’est pas possible sans environnement sécurisé dédié.
+        </div>
+
+        <div class="grid grid-2" style="margin-top:22px">
+          <div class="field">
+            <label for="nom">Nom *</label>
+            <input id="nom" type="text" required />
+          </div>
+          <div class="field">
+            <label for="prenom">Prénom *</label>
+            <input id="prenom" type="text" required />
+          </div>
+          <div class="field">
+            <label for="email">Adresse e-mail *</label>
+            <input id="email" type="email" required />
+          </div>
+          <div class="field">
+            <label for="classe">Classe / Groupe</label>
+            <input id="classe" type="text" />
+          </div>
+          <div class="field">
+            <label for="sujet">Sujet / titre de l’évaluation</label>
+            <input id="sujet" type="text" value="BAC BLANC 2024 – Numérique et Sciences Informatiques" readonly />
+          </div>
+          <div class="field">
+            <label for="dateheure">Date et heure</label>
+            <input id="dateheure" type="text" readonly />
+          </div>
+        </div>
+
+        <div class="start-box">
+          <div class="meta">
+            Durée paramétrée : <strong>3 h 30</strong> · Sauvegarde toutes les <strong>10 secondes</strong> · Plein écran demandé au démarrage
+          </div>
+          <button id="startBtn" class="btn btn-primary">👉 Commencer l’évaluation</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="examScreen" class="screen hidden">
+      <div class="exam-layout">
+        <aside class="sidebar card">
+          <div class="title-block">
+            <h2>BAC BLANC 2024 – NSI</h2>
+            <div class="small">Sujet interactif local</div>
+          </div>
+
+          <div class="identity" id="identityBox"></div>
+
+          <div class="timer">
+            <div>⏱ <strong id="timerLabel">Temps restant : 03:30:00</strong></div>
+            <span class="badge" id="statusBadge">En cours</span>
+          </div>
+
+          <div class="small" style="margin-bottom:8px">Progression</div>
+          <div class="progress"><span id="progressBar"></span></div>
+          <div class="small" id="progressText" style="margin-top:8px">0% complété</div>
+
+          <div class="exercise-list" id="exerciseNav"></div>
+
+          <div class="sticky-actions" style="margin-top:18px">
+            <div class="footer-actions">
+              <button class="btn btn-secondary" id="saveBtn">Sauvegarder</button>
+              <button class="btn btn-danger" id="submitBtn">👉 Soumettre ma copie</button>
+            </div>
+          </div>
+        </aside>
+
+        <main class="content card">
+          <div class="topbar">
+            <div>
+              <h2 id="currentExerciseTitle" style="margin:0">Exercice</h2>
+              <div class="small" id="exerciseInfo">Questions</div>
+            </div>
+            <div class="footer-actions">
+              <button class="btn btn-secondary" id="prevBtn">← Précédent</button>
+              <button class="btn btn-secondary" id="nextBtn">Suivant →</button>
+            </div>
+          </div>
+          <div id="questionsContainer"></div>
+        </main>
+      </div>
+    </section>
+
+    <section id="resultScreen" class="screen hidden">
+      <div class="final-screen card">
+        <h1 style="margin-top:0">Copie corrigée</h1>
+        <div id="studentSummary" class="small" style="margin-bottom:18px"></div>
+
+        <div class="score-grid" id="scoreGrid"></div>
+
+        <div class="result-box" style="margin-top:18px">
+          <h3>Rapport anti-triche</h3>
+          <ul class="anti-log" id="antiCheatList"></ul>
+        </div>
+
+        <div class="result-box" style="margin-top:18px">
+          <h3>Détail des corrections</h3>
+          <div id="correctionsContainer"></div>
+        </div>
+
+        <div class="footer-actions" style="margin-top:18px">
+          <button class="btn btn-success" id="downloadPdfBtn">👉 Télécharger ma copie corrigée en PDF</button>
+          <button class="btn btn-secondary" id="restartBtn">Revenir à l’accueil</button>
+        </div>
+      </div>
+    </section>
+
+    <div id="imageModal" class="modal hidden">
+      <div class="modal-content">
+        <button class="close-modal" id="closeModal">×</button>
+        <img id="modalImage" alt="Zoom figure" />
+      </div>
+    </div>
+
+    <div class="overlay-alert" id="toastContainer"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script>
+    const STORAGE_KEY = "nsi_exam_local_v1";
+    const LOCK_KEY = "nsi_exam_lock";
+    const EXAM_DURATION = 3 * 60 * 60 + 30 * 60; // 3h30
+
+    const examData = {
+      title: "BAC BLANC 2024 – Numérique et Sciences Informatiques",
+      subtitle: "Baccalauréat général – spécialité NSI",
+      exercises: [
+        {
+          id: "ex1",
+          title: "Exercice 1",
+          points: 9.75,
+          intro: "Programmation orientée objet, arbres binaires et structure de données pile.",
+          questions: [
+            {
+              id: "q1",
+              number: "1.1",
+              type: "text",
+              points: 0.5,
+              statement: `
+                <p><strong>Partie 1 – Création de la classe</strong></p>
+                <p>Donner les attributs de la classe <code>Employe</code> et une méthode.</p>
+                <pre><code>class Employe:
+ def __init__(self, n, s, genre):
+  self.nom = n
+  self.salaire = s
+  self.genre = genre
+  self.grade = 5
+  self.prime = 0
+
+ def set_grade(self, g):
+  # à compléter</code></pre>
+              `,
+              correction: "Les attributs sont nom, salaire, genre, grade, prime. Une méthode possible : __init__ ou set_grade.",
+              explanation: "Un attribut représente une donnée stockée dans l’objet. Une méthode représente une action de la classe.",
+              keywords: ["nom", "salaire", "genre", "grade", "prime", "set_grade"]
+            },
+            {
+              id: "q2",
+              number: "1.2",
+              type: "code",
+              points: 0.25,
+              statement: `<p>Écrire la méthode <code>set_grade</code> qui affecte le grade <code>g</code> à l’objet.</p>`,
+              correction: `def set_grade(self, g):
+    self.grade = g`,
+              explanation: "La méthode met simplement à jour l’attribut grade de l’objet courant.",
+              codePatterns: ["self.grade", "= g"]
+            },
+            {
+              id: "q3",
+              number: "1.3",
+              type: "code",
+              points: 0.5,
+              statement: `<p>Écrire la ligne de code permettant de créer la directrice Nadia, de salaire 5000, et l’affecter à <code>E_Nadia</code>.</p>`,
+              correction: `E_Nadia = Employe("Nadia", 5000, "F")`,
+              explanation: "On instancie la classe Employe avec le nom, le salaire et le genre.",
+              codePatterns: ["E_Nadia", "Employe", "Nadia", "5000", "\"F\""]
+            },
+            {
+              id: "q4",
+              number: "1.4",
+              type: "code",
+              points: 0.25,
+              statement: `<p>En utilisant une méthode, écrire la ligne de code permettant d’affecter le grade 1 à Nadia.</p>`,
+              correction: `E_Nadia.set_grade(1)`,
+              explanation: "Il faut appeler la méthode définie dans la classe sur l’instance concernée.",
+              codePatterns: ["E_Nadia", "set_grade", "(1)"]
+            },
+            {
+              id: "q5",
+              number: "2.1.a-b",
+              type: "text",
+              points: 0.5,
+              statement: `
+                <p><strong>Partie 2 – Arbres binaires</strong></p>
+                <p>a) Donner sans justification la hauteur de l’arbre A.</p>
+                <p>b) Décrire ce que permet d’afficher l’instruction <code>print(A.valeur.salaire)</code>.</p>
+              `,
+              image: "data:image/svg+xml;utf8," + encodeURIComponent(`
+                <svg xmlns="http://www.w3.org/2000/svg" width="980" height="640">
+                  <rect width="100%" height="100%" fill="white"/>
+                  <rect x="90" y="70" width="800" height="470" fill="none" stroke="#222" stroke-width="2"/>
+                  <text x="500" y="95" text-anchor="middle" font-size="30" font-family="Arial">E_Nadia</text>
+
+                  <line x1="500" y1="110" x2="290" y2="220" stroke="#444" stroke-width="3"/>
+                  <line x1="500" y1="110" x2="710" y2="220" stroke="#444" stroke-width="3"/>
+
+                  <text x="290" y="245" text-anchor="middle" font-size="28" font-family="Arial">E_Karim</text>
+                  <text x="710" y="245" text-anchor="middle" font-size="28" font-family="Arial">E_Aymen</text>
+
+                  <line x1="290" y1="255" x2="180" y2="370" stroke="#444" stroke-width="3"/>
+                  <line x1="290" y1="255" x2="395" y2="370" stroke="#444" stroke-width="3"/>
+                  <line x1="710" y1="255" x2="810" y2="370" stroke="#444" stroke-width="3"/>
+
+                  <text x="180" y="395" text-anchor="middle" font-size="26" font-family="Arial">E_Lina</text>
+                  <text x="395" y="395" text-anchor="middle" font-size="26" font-family="Arial">E_Elyes</text>
+                  <text x="810" y="395" text-anchor="middle" font-size="26" font-family="Arial">E_Adam</text>
+
+                  <line x1="180" y1="405" x2="135" y2="500" stroke="#444" stroke-width="3"/>
+                  <line x1="395" y1="405" x2="350" y2="500" stroke="#444" stroke-width="3"/>
+                  <line x1="395" y1="405" x2="440" y2="500" stroke="#444" stroke-width="3"/>
+                  <line x1="810" y1="405" x2="760" y2="500" stroke="#444" stroke-width="3"/>
+                  <line x1="810" y1="405" x2="860" y2="500" stroke="#444" stroke-width="3"/>
+
+                  <text x="135" y="525" text-anchor="middle" font-size="24" font-family="Arial">E_Nabil</text>
+                  <text x="350" y="525" text-anchor="middle" font-size="24" font-family="Arial">E_Ali</text>
+                  <text x="440" y="525" text-anchor="middle" font-size="24" font-family="Arial">E_Slim</text>
+                  <text x="760" y="525" text-anchor="middle" font-size="24" font-family="Arial">E_Eya</text>
+                  <text x="860" y="525" text-anchor="middle" font-size="24" font-family="Arial">E_Line</text>
+                </svg>
+              `),
+              correction: "a) La hauteur de l’arbre A est 4. b) L’instruction affiche le salaire de l’employé stocké à la racine de l’arbre A, donc celui de Nadia.",
+              explanation: "La hauteur correspond au nombre de niveaux du plus long chemin racine-feuille. A.valeur représente l’employé de la racine.",
+              keywords: ["4", "hauteur", "racine", "salaire", "Nadia"]
+            },
+            {
+              id: "q6",
+              number: "2.2",
+              type: "text",
+              points: 0.5,
+              statement: `
+                <p>Soit la fonction suivante :</p>
+                <pre><code>def parcours(A):
+ if A != None:
+  racine = A.valeur
+  parcours(A.fg)
+  print(racine.nom, end=' ')
+  parcours(A.fd)</code></pre>
+                <p>Donner le résultat affiché pour l’arbre initial A ainsi que le type de parcours.</p>
+              `,
+              correction: "Affichage : Nabil Lina Karim Ali Elyes Slim Nadia Aymen Eya Adam Line. Type : parcours infixe.",
+              explanation: "L’ordre est gauche, racine, droite : c’est un parcours infixe.",
+              keywords: ["infixe", "Nabil", "Lina", "Karim", "Ali", "Elyes", "Slim", "Nadia", "Aymen", "Eya", "Adam", "Line"]
+            },
+            {
+              id: "q7",
+              number: "2.3",
+              type: "code",
+              points: 1.25,
+              statement: `<p>Écrire une fonction <code>Nb_Genre(A, genre)</code> qui renvoie le nombre d’employés du genre demandé ('F' ou 'H').</p>`,
+              correction: `def Nb_Genre(A, genre):
+    if A is None:
+        return 0
+    n = 1 if A.valeur.genre == genre else 0
+    return n + Nb_Genre(A.fg, genre) + Nb_Genre(A.fd, genre)`,
+              explanation: "On parcourt récursivement l’arbre, on compte 1 si le genre du nœud courant correspond, sinon 0.",
+              codePatterns: ["def Nb_Genre", "if", "None", "A.valeur.genre", "A.fg", "A.fd", "return"]
+            },
+            {
+              id: "q8",
+              number: "2.4",
+              type: "code",
+              points: 1.5,
+              statement: `
+                <p>Compléter la fonction <code>Grades(A, n=1)</code> pour mettre à jour les grades selon le niveau.</p>
+                <pre><code>def Grades(A, n=1):
+ if A != None:
+   ................................ # mise à jour du grade
+   Grades(..........................)
+   Grades(..........................)</code></pre>
+              `,
+              correction: `def Grades(A, n=1):
+    if A != None:
+        A.valeur.grade = n
+        Grades(A.fg, n+1)
+        Grades(A.fd, n+1)`,
+              explanation: "La racine reçoit le grade n, puis les fils reçoivent n+1.",
+              codePatterns: ["A.valeur.grade", "= n", "Grades(A.fg, n+1)", "Grades(A.fd, n+1)"]
+            },
+            {
+              id: "q9",
+              number: "2.5",
+              type: "code",
+              points: 1.75,
+              statement: `<p>Dans la classe <code>Arbre</code>, écrire une méthode <code>calcul_prime(self)</code> qui calcule la prime de chaque employé : <code>prime = (salaire * nb_dep) / grade</code> avec <code>nb_dep</code> le nombre de fils immédiats.</p>`,
+              correction: `def calcul_prime(self):
+    if self is not None:
+        nb_dep = 0
+        if self.fg is not None:
+            nb_dep += 1
+            self.fg.calcul_prime()
+        if self.fd is not None:
+            nb_dep += 1
+            self.fd.calcul_prime()
+        self.valeur.prime = (self.valeur.salaire * nb_dep) / self.valeur.grade`,
+              explanation: "Le nombre de départements sous tutelle demandé dans l’énoncé correspond ici aux deux fils éventuels du nœud courant.",
+              codePatterns: ["def calcul_prime", "nb_dep", "self.fg", "self.fd", "self.valeur.prime", "self.valeur.salaire", "self.valeur.grade"]
+            },
+            {
+              id: "q10",
+              number: "3.1",
+              type: "code",
+              points: 0.75,
+              statement: `
+                <p><strong>Partie 3 – Piles</strong></p>
+                <p>Compléter <code>Arb_to_Pile(A, P)</code> pour empiler tous les nœuds selon un parcours préfixe.</p>
+                <pre><code>def Arb_to_Pile(A, P):
+ if A != None:
+   ........................
+   Arb_to_Pile(............)
+   Arb_to_Pile(............)</code></pre>
+              `,
+              correction: `def Arb_to_Pile(A, P):
+    if A != None:
+        empiler(P, A.valeur)
+        Arb_to_Pile(A.fg, P)
+        Arb_to_Pile(A.fd, P)`,
+              explanation: "Préfixe = racine, gauche, droite.",
+              codePatterns: ["empiler", "A.valeur", "Arb_to_Pile(A.fg, P)", "Arb_to_Pile(A.fd, P)"]
+            },
+            {
+              id: "q11",
+              number: "3.2.a-b",
+              type: "text",
+              points: 1.0,
+              statement: `
+                <p>Soit la fonction :</p>
+                <pre><code>def mystere(P):
+ q = creer_pile_vide()
+ while not est_vide(P):
+  x = depiler(P)
+  empiler(q, x)
+  print(x.nom, end=' ')
+ while not est_vide(q):
+  empiler(P, depiler(q))</code></pre>
+                <p>a) Donner son rôle.</p>
+                <p>b) Donner la suite des valeurs affichées après l’appel <code>mystere(P_employes)</code>.</p>
+              `,
+              correction: "a) La fonction affiche les éléments de la pile du sommet vers la base puis reconstitue la pile initiale. b) Avec la pile issue du parcours préfixe, l’affichage est l’ordre inverse de l’empilement préfixe : Line Eya Adam Aymen Slim Ali Elyes Nabil Lina Karim Nadia.",
+              explanation: "La pile reçoit les employés dans l’ordre préfixe, mais un dépilage affiche le dernier empilé en premier.",
+              keywords: ["affiche", "restaure", "pile", "Line", "Eya", "Adam", "Aymen", "Slim", "Ali", "Elyes", "Nabil", "Lina", "Karim", "Nadia"]
+            },
+            {
+              id: "q12",
+              number: "3.3",
+              type: "code",
+              points: 1.0,
+              statement: `<p>Écrire une fonction <code>Boss(P)</code> qui renvoie le nom de l’employé ayant la prime la plus grande.</p>`,
+              correction: `def Boss(P):
+    if est_vide(P):
+        return None
+    x = depiler(P)
+    maxi = x.prime
+    nom = x.nom
+    while not est_vide(P):
+        x = depiler(P)
+        if x.prime > maxi:
+            maxi = x.prime
+            nom = x.nom
+    return nom`,
+              explanation: "On parcourt toute la pile en mémorisant la prime maximale et le nom associé.",
+              codePatterns: ["def Boss", "est_vide", "depiler", "prime", "nom", "return"]
+            }
+          ]
+        },
+        {
+          id: "ex2",
+          title: "Exercice 2",
+          points: 4,
+          intro: "Dictionnaires et files.",
+          questions: [
+            {
+              id: "q13",
+              number: "1.a-b-c",
+              type: "text",
+              points: 1.0,
+              statement: `
+                <p><strong>Partie 1 – Dictionnaires</strong></p>
+                <div class="table-wrap">
+                  <table>
+                    <thead>
+                      <tr><th>dep</th><th>nom</th><th>nb_hab_1999</th><th>nb_hab_2012</th></tr>
+                    </thead>
+                    <tbody>
+                      <tr><td>56</td><td>Lorient</td><td>59224</td><td>58100</td></tr>
+                      <tr><td>56</td><td>Vannes</td><td>51759</td><td>53000</td></tr>
+                      <tr><td>56</td><td>Lanester</td><td>21901</td><td>22500</td></tr>
+                      <tr><td>56</td><td>Ploemeur</td><td>18301</td><td>18200</td></tr>
+                      <tr><td>56</td><td>Hennebont</td><td>13410</td><td>14600</td></tr>
+                      <tr><td>56</td><td>Pontivy</td><td>13501</td><td>13700</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+                <pre><code>listeVilles = [
+ {'dep':'56','nom':'Lorient','nb_hab_1999':59224,'nb_hab_2012':58100},
+ {'dep':'56','nom':'Vannes','nb_hab_1999':51759,'nb_hab_2012':53000},
+ ...
+]</code></pre>
+                <p>a) Indiquer le type de <code>listeVilles</code>.</p>
+                <p>b) Indiquer ce que renvoie <code>listeVilles[3]</code> en précisant son type.</p>
+                <p>c) Écrire une instruction affichant le nombre d’habitants à Hennebont en 2012.</p>
+              `,
+              correction: "a) listeVilles est une liste. b) listeVilles[3] renvoie le 4e dictionnaire de la liste, par exemple celui de Ploemeur ; son type est dictionnaire. c) Une réponse possible : print(listeVilles[4]['nb_hab_2012']).",
+              explanation: "On manipule ici une liste dont chaque élément est un dictionnaire représentant une ville.",
+              keywords: ["liste", "dictionnaire", "Ploemeur", "print", "nb_hab_2012", "14600"]
+            },
+            {
+              id: "q14",
+              number: "2.1",
+              type: "text",
+              points: 0.5,
+              statement: `
+                <p><strong>Partie 2 – Files</strong></p>
+                <p>On exécute :</p>
+                <pre><code>F = creer_file_vide()
+enfiler(F, 12)
+enfiler(F, 5)
+enfiler(F, 7)
+enfiler(F, 25)
+for i in range(2):
+    enfiler(F, defiler(F))</code></pre>
+                <p>Donner le contenu final de la file F.</p>
+              `,
+              correction: "Après deux rotations tête→queue, le contenu final est : 25, 7, 5, 12 si l’élément de droite est la tête de file. Équivalent ordre usuel tête→queue : 7, 25, 12, 5 selon la convention retenue. L’essentiel est de justifier la représentation.",
+              explanation: "L’énoncé précise une convention de représentation particulière : droite = tête, gauche = queue.",
+              keywords: ["25", "7", "5", "12", "rotation", "file"]
+            },
+            {
+              id: "q15",
+              number: "2.2",
+              type: "code",
+              points: 1.0,
+              statement: `<p>Écrire une fonction <code>list_to_file(L, F)</code> qui met les éléments de la liste <code>L</code> dans la file <code>F</code>.</p>`,
+              correction: `def list_to_file(L, F):
+    for x in L:
+        enfiler(F, x)`,
+              explanation: "On parcourt simplement la liste et on enfile successivement chaque élément.",
+              codePatterns: ["def list_to_file", "for", "in L", "enfiler(F, x)"]
+            },
+            {
+              id: "q16",
+              number: "2.3",
+              type: "code",
+              points: 1.5,
+              statement: `<p>Écrire une fonction <code>variation_totale(F)</code> qui renvoie la différence totale entre le nombre d’habitants en 2012 et en 1999 pour toute la file, tout en restaurant l’état initial de la file.</p>`,
+              correction: `def variation_totale(F):
+    tmp = creer_file_vide()
+    total = 0
+    while not est_file_vide(F):
+        x = defiler(F)
+        total += x['nb_hab_2012'] - x['nb_hab_1999']
+        enfiler(tmp, x)
+    while not est_file_vide(tmp):
+        enfiler(F, defiler(tmp))
+    return total`,
+              explanation: "On transfère dans une file temporaire pour calculer, puis on reconstitue la file initiale.",
+              codePatterns: ["def variation_totale", "creer_file_vide", "while not est_file_vide", "defiler", "enfiler", "nb_hab_2012", "nb_hab_1999", "return"]
+            }
+          ]
+        },
+        {
+          id: "ex3",
+          title: "Exercice 3",
+          points: 6.25,
+          intro: "Architectures matérielles, systèmes d’exploitation et réseaux.",
+          questions: [
+            {
+              id: "q17",
+              number: "1",
+              type: "text",
+              points: 1.0,
+              statement: `
+                <p>Reproduire le schéma du réseau et y insérer les adresses réseaux à l’emplacement adéquat.</p>
+                <img class="figure zoomable" alt="Schéma du réseau" src="data:image/svg+xml;utf8,${encodeURIComponent(`
+                  <svg xmlns='http://www.w3.org/2000/svg' width='1200' height='760'>
+                    <rect width='100%' height='100%' fill='white'/>
+                    <g font-family='Arial' fill='#111'>
+                      <rect x='390' y='60' width='110' height='55' rx='8' fill='#bbb' stroke='#333'/>
+                      <text x='445' y='145' text-anchor='middle' font-size='24'>R1</text>
+
+                      <rect x='700' y='60' width='110' height='55' rx='8' fill='#bbb' stroke='#333'/>
+                      <text x='755' y='145' text-anchor='middle' font-size='24'>R2</text>
+
+                      <rect x='530' y='290' width='110' height='55' rx='8' fill='#bbb' stroke='#333'/>
+                      <text x='585' y='375' text-anchor='middle' font-size='24'>R3</text>
+
+                      <rect x='230' y='230' width='110' height='55' rx='8' fill='#bbb' stroke='#333'/>
+                      <text x='285' y='315' text-anchor='middle' font-size='24'>R4</text>
+
+                      <rect x='820' y='250' width='110' height='55' rx='8' fill='#bbb' stroke='#333'/>
+                      <text x='875' y='335' text-anchor='middle' font-size='24'>R5</text>
+
+                      <rect x='120' y='390' width='90' height='50' rx='5' fill='#222' stroke='#000'/>
+                      <text x='165' y='475' text-anchor='middle' font-size='22'>Sw1</text>
+
+                      <rect x='880' y='420' width='90' height='50' rx='5' fill='#222' stroke='#000'/>
+                      <text x='925' y='505' text-anchor='middle' font-size='22'>Sw2</text>
+
+                      <line x1='285' y1='230' x2='445' y2='115' stroke='#444' stroke-width='4'/>
+                      <line x1='445' y1='115' x2='755' y2='115' stroke='#444' stroke-width='4'/>
+                      <line x1='445' y1='115' x2='585' y2='290' stroke='#444' stroke-width='4'/>
+                      <line x1='755' y1='115' x2='585' y2='290' stroke='#444' stroke-width='4'/>
+                      <line x1='755' y1='115' x2='875' y2='250' stroke='#444' stroke-width='4'/>
+                      <line x1='285' y1='285' x2='585' y2='320' stroke='#444' stroke-width='4'/>
+                      <line x1='585' y1='320' x2='875' y2='280' stroke='#444' stroke-width='4'/>
+                      <line x1='165' y1='390' x2='285' y2='285' stroke='#444' stroke-width='4'/>
+                      <line x1='925' y1='420' x2='875' y2='305' stroke='#444' stroke-width='4'/>
+
+                      <text x='80' y='350' font-size='26'>L2</text>
+                      <text x='990' y='410' font-size='26'>L1</text>
+
+                      <text x='430' y='38' font-size='18'>195.168.1.0/24</text>
+                      <text x='570' y='94' font-size='18'>196.163.2.0/24</text>
+                      <text x='500' y='215' font-size='18'>195.168.1.0/24</text>
+                      <text x='650' y='205' font-size='18'>198.164.3.0/24</text>
+                      <text x='805' y='180' font-size='18'>197.162.1.0/24</text>
+                      <text x='390' y='295' font-size='18'>193.154.5.0/24</text>
+                      <text x='670' y='310' font-size='18'>191.145.1.0/24</text>
+                      <text x='85' y='550' font-size='18'>192.168.10.0/24</text>
+                      <text x='910' y='590' font-size='18'>172.16.0.0/16</text>
+                    </g>
+                  </svg>
+                `)}" />
+                <div class="figure-caption">Figure réseau extraite et reconstituée en haute lisibilité.</div>
+              `,
+              correction: "Les réseaux à placer sont : L2 ↔ 192.168.10.0/24 via R4 ; L1 ↔ 172.16.0.0/16 via R5 ; R1-R2 ↔ 196.163.2.0/24 ; R1-R3 ↔ 195.168.1.0/24 ; R1-R4 ↔ 194.162.1.0/24 ; R2-R3 ↔ 198.164.3.0/24 ; R2-R5 ↔ 197.162.1.0/24 ; R3-R4 ↔ 193.154.5.0/24 ; R3-R5 ↔ 191.145.1.0/24.",
+              explanation: "Il faut croiser le schéma avec le tableau des interfaces de chaque routeur.",
+              keywords: ["192.168.10.0/24", "172.16.0.0/16", "196.163.2.0/24", "195.168.1.0/24", "194.162.1.0/24", "198.164.3.0/24", "197.162.1.0/24", "193.154.5.0/24", "191.145.1.0/24"]
+            },
+            {
+              id: "q18",
+              number: "2",
+              type: "text",
+              points: 0.5,
+              statement: `<p>Donner l’adresse réseau et l’adresse de diffusion du réseau local L2.</p>`,
+              correction: "L2 correspond à 192.168.10.0/24. Adresse réseau : 192.168.10.0. Adresse de diffusion : 192.168.10.255.",
+              explanation: "Avec un masque /24, les 24 premiers bits identifient le réseau ; le dernier octet vaut 0 pour l’adresse réseau et 255 pour le broadcast.",
+              keywords: ["192.168.10.0", "192.168.10.255"]
+            },
+            {
+              id: "q19",
+              number: "3.a-b",
+              type: "text",
+              points: 0.75,
+              statement: `<p>PC1 a l’adresse 192.168.10.47/24.</p><p>a) Donner la conversion binaire du quatrième octet 47.</p><p>b) Donner le nombre d’adresses IP encore disponibles dans L2.</p>`,
+              correction: "a) 47 en binaire vaut 00101111. b) En /24, il y a 256 adresses dont 254 attribuables. Si PC1 et PC2/PC3 sont à considérer, il reste selon les machines déjà présentes 251 adresses disponibles si trois postes sont comptés. Une réponse souvent attendue est 253 si seul PC1 est pris en compte comme déjà utilisé.",
+              explanation: "L’énoncé est ambigu selon qu’on tienne compte des autres machines déjà représentées. Le raisonnement doit être cohérent.",
+              keywords: ["00101111", "254", "253", "251"]
+            },
+            {
+              id: "q20",
+              number: "4",
+              type: "text",
+              points: 1.0,
+              statement: `
+                <p>Parmi les adresses suivantes, indiquer celle(s) qui peut (peuvent) être attribuée(s) à PC2 :</p>
+                <ul>
+                  <li>192.168.11.48</li>
+                  <li>192.168.10.0</li>
+                  <li>192.168.10.200</li>
+                  <li>192.168.10.47</li>
+                </ul>
+              `,
+              correction: "Seule 192.168.10.200 convient. 192.168.11.48 n’est pas dans le bon réseau ; 192.168.10.0 est l’adresse réseau ; 192.168.10.47 est déjà utilisée par PC1.",
+              explanation: "Une adresse hôte doit appartenir au même sous-réseau, ne pas être l’adresse réseau ou de diffusion, et ne pas être déjà attribuée.",
+              keywords: ["192.168.10.200"]
+            },
+            {
+              id: "q21",
+              number: "5",
+              type: "text",
+              points: 1.5,
+              statement: `
+                <p>Compléter une table de routage possible de R4 avec RIP.</p>
+                <div class="table-wrap">
+                  <table>
+                    <thead>
+                      <tr><th>Adresse destination</th><th>Interface</th><th>Passerelle</th><th>Métrique</th></tr>
+                    </thead>
+                    <tbody>
+                      <tr><td>192.168.10.0/24</td><td>192.168.10.4</td><td>-</td><td>0</td></tr>
+                      <tr><td>191.145.1.0/24</td><td>193.154.5.4</td><td>193.154.5.3</td><td>1</td></tr>
+                      <tr><td>172.16.0.0/16</td><td>193.154.5.4</td><td>193.154.5.3</td><td>2</td></tr>
+                      <tr><td>195.168.1.0/24</td><td>194.162.1.4</td><td>194.162.1.1</td><td>1</td></tr>
+                      <tr><td>196.163.2.0/24</td><td>194.162.1.4</td><td>194.162.1.1</td><td>2</td></tr>
+                      <tr><td>197.162.1.0/24</td><td>193.154.5.4</td><td>193.154.5.3</td><td>2</td></tr>
+                      <tr><td>198.164.3.0/24</td><td>193.154.5.4</td><td>193.154.5.3</td><td>1</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+                <p>Rédiger la table ou expliquer les choix de passerelles et métriques.</p>
+              `,
+              correction: "Une table possible est celle ci-dessus : accès direct à 192.168.10.0/24, accès via R3 ou R1 selon le nombre minimal de sauts. Les interfaces de R4 sont 192.168.10.4, 194.162.1.4 et 193.154.5.4 ; les passerelles voisines sont R1 = 194.162.1.1 et R3 = 193.154.5.3.",
+              explanation: "Avec RIP, on minimise le nombre de routeurs traversés.",
+              keywords: ["193.154.5.4", "193.154.5.3", "194.162.1.4", "194.162.1.1", "métrique", "RIP"]
+            },
+            {
+              id: "q22",
+              number: "6.a-b-c",
+              type: "text",
+              points: 1.5,
+              statement: `
+                <p>On utilise OSPF. Le coût est donné par <code>10^9 / BP</code>.</p>
+                <div class="table-wrap">
+                  <table>
+                    <thead><tr><th>Liaison</th><th>R1-R4</th><th>R1-R2</th><th>R1-R3</th><th>R2-R3</th><th>R2-R5</th><th>R3-R4</th><th>R3-R5</th></tr></thead>
+                    <tbody><tr><td>Coût</td><td>10</td><td>10</td><td>1</td><td>1</td><td>100</td><td>?</td><td>1</td></tr></tbody>
+                  </table>
+                </div>
+                <p>a) Donner la bande passante entre R1 et R4.</p>
+                <p>b) Si la bande passante entre R3 et R4 vaut 10 MB/s, donner le coût.</p>
+                <p>c) Déterminer le chemin d’un paquet partant de L1 vers L2 et son coût.</p>
+              `,
+              correction: "a) BP = 10^9 / 10 = 10^8 bits/s, soit 100 Mb/s. b) Pour 10 MB/s ≈ 80 Mb/s si on raisonne en octets ; dans ce type d’exercice scolaire on attend souvent 10^7 bits/s donc coût 100 si 10 Mb/s. c) Le meilleur chemin est L1 → R5 → R3 → R4 → L2, coût 1 + 100 = 101 si R3-R4 vaut 100 ; ou 1 + 1 + 10 selon interprétation des unités. L’idée est de choisir le chemin de coût minimal.",
+              explanation: "Il faut rester cohérent avec les unités utilisées dans l’énoncé. L’ambiguïté MB/s vs Mb/s doit être signalée.",
+              keywords: ["100 Mb/s", "100", "R5", "R3", "R4", "coût minimal", "OSPF"]
+            }
+          ]
+        }
+      ]
+    };
+
+    const state = {
+      student: {
+        nom: "", prenom: "", email: "", classe: "",
+        sujet: examData.title, dateheure: ""
+      },
+      started: false,
+      submitted: false,
+      currentExerciseIndex: 0,
+      startedAt: null,
+      remainingSeconds: EXAM_DURATION,
+      answers: {},
+      antiCheat: {
+        tabSwitches: 0,
+        focusLosses: 0,
+        pasteAttempts: 0,
+        copyAttempts: 0,
+        contextMenuAttempts: 0,
+        multipleWindowDetected: false,
+        fullScreenExited: 0,
+        incidents: []
+      },
+      score: null
+    };
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      localStorage.setItem(LOCK_KEY, JSON.stringify({ t: Date.now() }));
+    }
+
+    function loadState() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      try {
+        const data = JSON.parse(raw);
+        Object.assign(state, data);
+      } catch(e) {}
+    }
+
+    function toast(message, type="warning") {
+      const c = document.getElementById("toastContainer");
+      const d = document.createElement("div");
+      d.className = "toast";
+      d.style.borderLeftColor = type === "danger" ? "var(--danger)" : type === "success" ? "var(--success)" : "var(--warning)";
+      d.textContent = message;
+      c.appendChild(d);
+      setTimeout(()=> {
+        d.style.opacity = "0";
+        setTimeout(()=>d.remove(), 350);
+      }, 3200);
+    }
+
+    function logIncident(type, detail) {
+      state.antiCheat.incidents.push({
+        time: new Date().toLocaleString("fr-FR"),
+        type, detail
+      });
+      saveState();
+    }
+
+    function nowString() {
+      return new Date().toLocaleString("fr-FR");
+    }
+
+    function formatTime(sec) {
+      const h = String(Math.floor(sec / 3600)).padStart(2, "0");
+      const m = String(Math.floor((sec % 3600) / 60)).padStart(2, "0");
+      const s = String(sec % 60).padStart(2, "0");
+      return `${h}:${m}:${s}`;
+    }
+
+    function escapeHtml(str="") {
+      return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[m]));
+    }
+
+    function getAllQuestions() {
+      return examData.exercises.flatMap(ex => ex.questions.map(q => ({...q, exerciseId: ex.id, exerciseTitle: ex.title})));
+    }
+
+    function totalQuestions() {
+      return getAllQuestions().length;
+    }
+
+    function answeredCount() {
+      return getAllQuestions().filter(q => (state.answers[q.id] || "").trim().length > 0).length;
+    }
+
+    function updateProgress() {
+      const percent = Math.round((answeredCount() / totalQuestions()) * 100);
+      document.getElementById("progressBar").style.width = percent + "%";
+      document.getElementById("progressText").textContent = `${percent}% complété (${answeredCount()}/${totalQuestions()} questions répondues)`;
+    }
+
+    function renderIdentity() {
+      document.getElementById("identityBox").innerHTML = `
+        <div><strong>${escapeHtml(state.student.prenom)} ${escapeHtml(state.student.nom)}</strong></div>
+        <div class="small">${escapeHtml(state.student.email)}</div>
+        <div class="small">${escapeHtml(state.student.classe || "Classe non renseignée")}</div>
+        <div class="small">${escapeHtml(state.student.dateheure)}</div>
+      `;
+    }
+
+    function lineNumbersText(text) {
+      const n = Math.max(12, text.split("\n").length + 3);
+      return Array.from({length:n}, (_,i)=>i+1).join("\n");
+    }
+
+    function renderExerciseNav() {
+      const nav = document.getElementById("exerciseNav");
+      nav.innerHTML = "";
+      examData.exercises.forEach((ex, idx) => {
+        const btn = document.createElement("button");
+        btn.className = "exercise-btn" + (idx === state.currentExerciseIndex ? " active" : "");
+        const exAnswered = ex.questions.filter(q => (state.answers[q.id] || "").trim()).length;
+        btn.innerHTML = `<strong>${ex.title}</strong><br><span class="small">${ex.questions.length} question(s) · ${exAnswered}/${ex.questions.length} répondues</span>`;
+        btn.onclick = () => { state.currentExerciseIndex = idx; renderExam(); saveState(); };
+        nav.appendChild(btn);
+      });
+    }
+
+    function renderQuestion(q) {
+      const answer = state.answers[q.id] || "";
+      const wrapper = document.createElement("div");
+      wrapper.className = "question-card";
+      wrapper.innerHTML = `
+        <div class="question-header">
+          <div>
+            <div class="badge">Question ${q.number}</div>
+          </div>
+          <div class="badge">${q.points} pt${q.points>1?"s":""}</div>
+        </div>
+        <div class="statement">${q.statement}</div>
+        ${q.image ? `<div style="margin-top:14px">
+          <img src="${q.image}" alt="Figure associée" class="figure zoomable"/>
+          <div class="figure-caption">Cliquer pour zoomer.</div>
+        </div>` : ""}
+        <div style="margin-top:16px">
+          <label class="small" for="answer_${q.id}" style="display:block;margin-bottom:8px">Votre réponse</label>
+          ${
+            q.type === "code"
+              ? `
+              <div class="code-editor">
+                <div class="fake-toolbar">Éditeur Python local · indentation TAB · police monospace</div>
+                <pre class="line-numbers" id="lines_${q.id}">${lineNumbersText(answer)}</pre>
+                <textarea spellcheck="false" class="code-answer" id="answer_${q.id}" data-qid="${q.id}" placeholder="Écrivez votre code Python ici...">${escapeHtml(answer)}</textarea>
+              </div>
+              `
+              : `<textarea class="answer" id="answer_${q.id}" data-qid="${q.id}" placeholder="Rédigez votre réponse ici...">${escapeHtml(answer)}</textarea>`
+          }
+        </div>
+      `;
+      return wrapper;
+    }
+
+    function bindAnswerEvents() {
+      document.querySelectorAll("[data-qid]").forEach(el => {
+        el.addEventListener("input", e => {
+          const qid = e.target.dataset.qid;
+          state.answers[qid] = e.target.value;
+          if (e.target.classList.contains("code-answer")) {
+            const lines = document.getElementById("lines_" + qid);
+            if (lines) lines.textContent = lineNumbersText(e.target.value);
+          }
+          updateProgress();
+          renderExerciseNav();
+        });
+
+        el.addEventListener("keydown", e => {
+          if (e.key === "Tab") {
+            e.preventDefault();
+            const start = e.target.selectionStart;
+            const end = e.target.selectionEnd;
+            const value = e.target.value;
+            e.target.value = value.substring(0, start) + "    " + value.substring(end);
+            e.target.selectionStart = e.target.selectionEnd = start + 4;
+            e.target.dispatchEvent(new Event("input"));
+          }
+          if ((e.ctrlKey || e.metaKey) && ["c","v","x","u","a"].includes(e.key.toLowerCase())) {
+            if (["v"].includes(e.key.toLowerCase())) state.antiCheat.pasteAttempts++;
+            if (["c","x"].includes(e.key.toLowerCase())) state.antiCheat.copyAttempts++;
+            logIncident("Raccourci bloqué", `Tentative ${e.key.toUpperCase()} détectée`);
+            toast(`Action ${e.key.toUpperCase()} bloquée.`, "danger");
+            e.preventDefault();
+          }
+        });
+
+        el.addEventListener("paste", e => {
+          state.antiCheat.pasteAttempts++;
+          logIncident("Collage bloqué", "Tentative de collage dans une zone de réponse");
+          toast("Collage interdit.", "danger");
+          e.preventDefault();
+        });
+
+        el.addEventListener("copy", e => {
+          state.antiCheat.copyAttempts++;
+          logIncident("Copie bloquée", "Tentative de copie");
+          toast("Copie interdite.", "danger");
+          e.preventDefault();
+        });
+
+        el.addEventListener("cut", e => {
+          state.antiCheat.copyAttempts++;
+          logIncident("Coupe bloquée", "Tentative de coupe");
+          toast("Couper interdit.", "danger");
+          e.preventDefault();
+        });
+
+        el.addEventListener("selectstart", e => {
+          if ((window.getSelection()?.toString() || "").length > 80) {
+            logIncident("Sélection excessive", "Sélection de texte importante détectée");
+          }
+        });
+      });
+
+      document.querySelectorAll(".zoomable").forEach(img => {
+        img.addEventListener("click", () => {
+          document.getElementById("modalImage").src = img.src;
+          document.getElementById("imageModal").classList.remove("hidden");
+        });
+      });
+    }
+
+    function renderExam() {
+      renderIdentity();
+      renderExerciseNav();
+      updateProgress();
+      const ex = examData.exercises[state.currentExerciseIndex];
+      document.getElementById("currentExerciseTitle").textContent = `${ex.title} (${ex.points} points)`;
+      document.getElementById("exerciseInfo").textContent = ex.intro;
+      const container = document.getElementById("questionsContainer");
+      container.innerHTML = "";
+      ex.questions.forEach(q => container.appendChild(renderQuestion(q)));
+      bindAnswerEvents();
+      document.getElementById("prevBtn").disabled = state.currentExerciseIndex === 0;
+      document.getElementById("nextBtn").disabled = state.currentExerciseIndex === examData.exercises.length - 1;
+    }
+
+    function compareText(answer, q) {
+      const a = (answer || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      if (!a.trim()) return {correct:false, ratio:0};
+      let score = 0;
+      let total = q.keywords?.length || 0;
+      if (total === 0) return {correct: a.length > 10, ratio: a.length > 10 ? 1 : 0};
+
+      q.keywords.forEach(k => {
+        const kk = k.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        if (a.includes(kk)) score++;
+      });
+      const ratio = score / total;
+      return {correct: ratio >= 0.45, ratio};
+    }
+
+    function compareCode(answer, q) {
+      const a = (answer || "").replace(/\s+/g, " ").toLowerCase();
+      if (!a.trim()) return {correct:false, ratio:0};
+      let found = 0;
+      let total = q.codePatterns?.length || 0;
+      q.codePatterns.forEach(p => {
+        if (a.includes(p.toLowerCase().replace(/\s+/g, " "))) found++;
+      });
+      const ratio = total ? found / total : 0;
+      return {correct: ratio >= 0.5, ratio};
+    }
+
+    function gradeExam() {
+      let totalEarned = 0;
+      let totalPossible = 0;
+      const details = [];
+
+      examData.exercises.forEach(ex => {
+        ex.questions.forEach(q => {
+          const ans = state.answers[q.id] || "";
+          const res = q.type === "code" ? compareCode(ans, q) : compareText(ans, q);
+          let points = 0;
+          if (ans.trim()) {
+            points = res.correct ? q.points : +(q.points * Math.max(0.2, res.ratio * 0.8)).toFixed(2);
+            if (points > q.points) points = q.points;
+          }
+          totalEarned += points;
+          totalPossible += q.points;
+          details.push({
+            exercise: ex.title,
+            qid: q.id,
+            number: q.number,
+            statementText: stripHtml(q.statement).slice(0, 180),
+            answer: ans,
+            points,
+            possible: q.points,
+            correct: res.correct,
+            correction: q.correction,
+            explanation: q.explanation
+          });
+        });
+      });
+
+      const note20 = +(totalEarned / totalPossible * 20).toFixed(2);
+      let appreciation = "Insuffisant";
+      if (note20 >= 16) appreciation = "Excellent";
+      else if (note20 >= 14) appreciation = "Bien";
+      else if (note20 >= 12) appreciation = "Assez bien";
+      else if (note20 >= 10) appreciation = "Passable";
+
+      state.score = {
+        totalEarned: +totalEarned.toFixed(2),
+        totalPossible: +totalPossible.toFixed(2),
+        note20,
+        percent: +((totalEarned / totalPossible) * 100).toFixed(1),
+        appreciation,
+        details
+      };
+      saveState();
+    }
+
+    function stripHtml(html) {
+      const d = document.createElement("div");
+      d.innerHTML = html;
+      return d.textContent || d.innerText || "";
+    }
+
+    function renderResults() {
+      const s = state.score;
+      document.getElementById("studentSummary").innerHTML = `
+        <strong>${escapeHtml(state.student.prenom)} ${escapeHtml(state.student.nom)}</strong> ·
+        ${escapeHtml(state.student.email)} · ${escapeHtml(state.student.classe || "Classe non renseignée")} ·
+        Début : ${escapeHtml(state.student.dateheure)}
+      `;
+      document.getElementById("scoreGrid").innerHTML = `
+        <div class="score-card"><div class="small">Points obtenus</div><div style="font-size:1.7rem;font-weight:800">${s.totalEarned}/${s.totalPossible}</div></div>
+        <div class="score-card"><div class="small">Note finale</div><div style="font-size:1.7rem;font-weight:800">${s.note20}/20</div></div>
+        <div class="score-card"><div class="small">Pourcentage</div><div style="font-size:1.7rem;font-weight:800">${s.percent}%</div></div>
+        <div class="score-card"><div class="small">Appréciation</div><div style="font-size:1.7rem;font-weight:800">${s.appreciation}</div></div>
+      `;
+
+      const anti = state.antiCheat;
+      const items = [
+        `Changements d’onglet : ${anti.tabSwitches}`,
+        `Pertes de focus : ${anti.focusLosses}`,
+        `Tentatives de collage : ${anti.pasteAttempts}`,
+        `Tentatives de copie/coupe : ${anti.copyAttempts}`,
+        `Tentatives de clic droit : ${anti.contextMenuAttempts}`,
+        `Sorties du plein écran : ${anti.fullScreenExited}`,
+        `Fenêtres multiples détectées : ${anti.multipleWindowDetected ? "Oui" : "Non"}`
+      ];
+      anti.incidents.forEach(i => items.push(`[${i.time}] ${i.type} — ${i.detail}`));
+      document.getElementById("antiCheatList").innerHTML = items.map(i => `<li>${escapeHtml(i)}</li>`).join("");
+
+      const corr = document.getElementById("correctionsContainer");
+      corr.innerHTML = "";
+      s.details.forEach(d => {
+        const div = document.createElement("div");
+        div.className = "result-box";
+        div.innerHTML = `
+          <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
+            <div><strong>${escapeHtml(d.exercise)} – Question ${escapeHtml(d.number)}</strong></div>
+            <div>${d.correct ? `<span class="ok">✔ Correct</span>` : `<span class="ko">❌ Incorrect</span>`} · ${d.points}/${d.possible} pt</div>
+          </div>
+          <div class="small" style="margin-top:8px">${escapeHtml(d.statementText)}</div>
+          <div style="margin-top:10px"><strong>Votre réponse :</strong><pre class="codebox">${escapeHtml(d.answer || "(aucune réponse)")}</pre></div>
+          <div><strong>Correction détaillée :</strong><pre class="codebox">${escapeHtml(d.correction)}</pre></div>
+          <div><strong>Explication pédagogique :</strong> ${escapeHtml(d.explanation)}</div>
+          <div class="small" style="margin-top:8px"><strong>Conseil :</strong> soyez précis dans la justification et reprenez les mots-clés attendus de l’énoncé.</div>
+        `;
+        corr.appendChild(div);
+      });
+    }
+
+    async function downloadPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: "pt", format: "a4" });
+      const margin = 40;
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      let y = margin;
+
+      function addLine(text, size=11, bold=false) {
+        doc.setFont("helvetica", bold ? "bold" : "normal");
+        doc.setFontSize(size);
+        const lines = doc.splitTextToSize(text, pageWidth - margin * 2);
+        lines.forEach(line => {
+          if (y > pageHeight - margin) { doc.addPage(); y = margin; }
+          doc.text(line, margin, y);
+          y += size + 5;
+        });
+      }
+
+      addLine("Copie corrigée - BAC BLANC 2024 NSI", 18, true);
+      addLine(`${state.student.prenom} ${state.student.nom} - ${state.student.email}`, 11);
+      addLine(`Classe/Groupe : ${state.student.classe || "Non renseigné"}`, 11);
+      addLine(`Début : ${state.student.dateheure}`, 11);
+      addLine(`Note : ${state.score.note20}/20 - ${state.score.appreciation} - ${state.score.percent}%`, 12, true);
+      addLine(" ", 8);
+
+      addLine("Journal anti-fraude", 14, true);
+      addLine(`Changements d’onglet : ${state.antiCheat.tabSwitches}`);
+      addLine(`Pertes de focus : ${state.antiCheat.focusLosses}`);
+      addLine(`Tentatives de collage : ${state.antiCheat.pasteAttempts}`);
+      addLine(`Tentatives de copie/coupe : ${state.antiCheat.copyAttempts}`);
+      addLine(`Tentatives de clic droit : ${state.antiCheat.contextMenuAttempts}`);
+      addLine(`Sorties plein écran : ${state.antiCheat.fullScreenExited}`);
+      state.antiCheat.incidents.forEach(i => addLine(`[${i.time}] ${i.type} - ${i.detail}`, 10));
+
+      addLine(" ", 8);
+      addLine("Réponses et correction", 14, true);
+      state.score.details.forEach(d => {
+        addLine(`${d.exercise} - Question ${d.number} - ${d.points}/${d.possible} pt`, 12, true);
+        addLine(`Réponse élève : ${d.answer || "(aucune réponse)"}`, 10);
+        addLine(`Correction : ${d.correction}`, 10);
+        addLine(`Explication : ${d.explanation}`, 10);
+        addLine(" ", 6);
+      });
+
+      doc.save(`copie_corrigee_${state.student.nom || "eleve"}_${state.student.prenom || ""}.pdf`);
+    }
+
+    function lockExam() {
+      state.submitted = true;
+      saveState();
+      document.querySelectorAll("textarea,input").forEach(el => {
+        if (!["nom","prenom","email","classe","sujet","dateheure"].includes(el.id)) el.disabled = true;
+      });
+    }
+
+    function submitExam(auto=false) {
+      if (state.submitted) return;
+      if (!confirm(auto ? "Le temps est écoulé. Soumettre automatiquement la copie ?" : "Confirmer la soumission de la copie ?")) return;
+      lockExam();
+      gradeExam();
+      document.getElementById("examScreen").classList.add("hidden");
+      document.getElementById("resultScreen").classList.remove("hidden");
+      renderResults();
+    }
+
+    function updateTimerUI() {
+      document.getElementById("timerLabel").textContent = "Temps restant : " + formatTime(state.remainingSeconds);
+      const badge = document.getElementById("statusBadge");
+      if (state.remainingSeconds <= 300) {
+        badge.textContent = "Fin imminente";
+        badge.style.background = "#3d2312";
+        badge.style.color = "#ffd8a8";
+      } else {
+        badge.textContent = "En cours";
+        badge.style.background = "";
+        badge.style.color = "";
+      }
+    }
+
+    function requestFullscreenSafe() {
+      const el = document.documentElement;
+      if (!document.fullscreenElement && el.requestFullscreen) {
+        el.requestFullscreen().catch(()=>{});
+      }
+    }
+
+    function setupAntiCheat() {
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden && state.started && !state.submitted) {
+          state.antiCheat.tabSwitches++;
+          logIncident("Changement d’onglet", "L’utilisateur a quitté l’onglet actif");
+          toast("Alerte : changement d’onglet détecté.", "danger");
+        }
+      });
+
+      window.addEventListener("blur", () => {
+        if (state.started && !state.submitted) {
+          state.antiCheat.focusLosses++;
+          logIncident("Perte de focus", "La fenêtre a perdu le focus");
+          toast("Alerte : perte de focus détectée.", "danger");
+        }
+      });
+
+      document.addEventListener("contextmenu", e => {
+        if (state.started && !state.submitted) {
+          state.antiCheat.contextMenuAttempts++;
+          logIncident("Clic droit bloqué", "Tentative d’ouverture du menu contextuel");
+          toast("Clic droit interdit.", "danger");
+          e.preventDefault();
+        }
+      });
+
+      document.addEventListener("fullscreenchange", () => {
+        if (state.started && !state.submitted && !document.fullscreenElement) {
+          state.antiCheat.fullScreenExited++;
+          logIncident("Sortie plein écran", "L’utilisateur a quitté le plein écran");
+          toast("Le plein écran est requis.", "danger");
+        }
+      });
+
+      window.addEventListener("storage", (e) => {
+        if (e.key === LOCK_KEY && state.started && !state.submitted) {
+          state.antiCheat.multipleWindowDetected = true;
+          logIncident("Fenêtres multiples", "Une autre fenêtre/onglet de l’évaluation semble ouvert");
+          toast("Alerte : plusieurs fenêtres détectées.", "danger");
+        }
+      });
+    }
+
+    let timerInterval = null;
+    let autosaveInterval = null;
+
+    function startExamFlow() {
+      state.started = true;
+      if (!state.startedAt) state.startedAt = Date.now();
+      saveState();
+      document.getElementById("welcomeScreen").classList.add("hidden");
+      document.getElementById("resultScreen").classList.add("hidden");
+      document.getElementById("examScreen").classList.remove("hidden");
+      renderExam();
+      updateTimerUI();
+      requestFullscreenSafe();
+
+      if (!timerInterval) {
+        timerInterval = setInterval(() => {
+          if (state.submitted) return;
+          state.remainingSeconds--;
+          updateTimerUI();
+          if (state.remainingSeconds === 300) {
+            toast("Attention : plus que 5 minutes.", "warning");
+            logIncident("Alerte minuterie", "Alerte des 5 dernières minutes");
+          }
+          if (state.remainingSeconds <= 0) {
+            state.remainingSeconds = 0;
+            updateTimerUI();
+            clearInterval(timerInterval);
+            submitExam(true);
+          }
+          saveState();
+        }, 1000);
+      }
+
+      if (!autosaveInterval) {
+        autosaveInterval = setInterval(() => {
+          saveState();
+          toast("Sauvegarde automatique effectuée.", "success");
+        }, 10000);
+      }
+    }
+
+    function fillWelcomeForm() {
+      document.getElementById("dateheure").value = state.student.dateheure || nowString();
+      document.getElementById("nom").value = state.student.nom || "";
+      document.getElementById("prenom").value = state.student.prenom || "";
+      document.getElementById("email").value = state.student.email || "";
+      document.getElementById("classe").value = state.student.classe || "";
+      document.getElementById("sujet").value = state.student.sujet || examData.title;
+      ["nom","prenom","email","classe"].forEach(id => {
+        document.getElementById(id).addEventListener("input", () => {
+          state.student[id] = document.getElementById(id).value;
+          if (!state.student.dateheure) state.student.dateheure = document.getElementById("dateheure").value;
+          saveState();
+        });
+      });
+    }
+
+    function validateWelcome() {
+      const nom = document.getElementById("nom").value.trim();
+      const prenom = document.getElementById("prenom").value.trim();
+      const email = document.getElementById("email").value.trim();
+      if (!nom || !prenom || !email) {
+        toast("Veuillez compléter Nom, Prénom et Adresse e-mail.", "danger");
+        return false;
+      }
+      state.student.nom = nom;
+      state.student.prenom = prenom;
+      state.student.email = email;
+      state.student.classe = document.getElementById("classe").value.trim();
+      state.student.sujet = document.getElementById("sujet").value;
+      state.student.dateheure = document.getElementById("dateheure").value;
+      saveState();
+      return true;
+    }
+
+    function init() {
+      loadState();
+      if (!state.student.dateheure) state.student.dateheure = nowString();
+      fillWelcomeForm();
+      setupAntiCheat();
+
+      document.getElementById("startBtn").addEventListener("click", () => {
+        if (!validateWelcome()) return;
+        startExamFlow();
+      });
+
+      document.getElementById("saveBtn").addEventListener("click", () => {
+        saveState();
+        toast("Sauvegarde manuelle effectuée.", "success");
+      });
+
+      document.getElementById("prevBtn").addEventListener("click", () => {
+        if (state.currentExerciseIndex > 0) {
+          state.currentExerciseIndex--;
+          renderExam();
+          saveState();
+        }
+      });
+
+      document.getElementById("nextBtn").addEventListener("click", () => {
+        if (state.currentExerciseIndex < examData.exercises.length - 1) {
+          state.currentExerciseIndex++;
+          renderExam();
+          saveState();
+        }
+      });
+
+      document.getElementById("submitBtn").addEventListener("click", () => submitExam(false));
+      document.getElementById("closeModal").addEventListener("click", () => document.getElementById("imageModal").classList.add("hidden"));
+      document.getElementById("imageModal").addEventListener("click", e => {
+        if (e.target.id === "imageModal") document.getElementById("imageModal").classList.add("hidden");
+      });
+
+      document.getElementById("downloadPdfBtn").addEventListener("click", downloadPDF);
+      document.getElementById("restartBtn").addEventListener("click", () => {
+        if (confirm("Revenir à l’accueil ? Les données sauvegardées restent en local.")) {
+          document.getElementById("resultScreen").classList.add("hidden");
+          document.getElementById("welcomeScreen").classList.remove("hidden");
+        }
+      });
+
+      if (state.submitted && state.score) {
+        document.getElementById("welcomeScreen").classList.add("hidden");
+        document.getElementById("examScreen").classList.add("hidden");
+        document.getElementById("resultScreen").classList.remove("hidden");
+        renderResults();
+      } else if (state.started) {
+        if (confirm("Une session en cours a été retrouvée. Voulez-vous la reprendre ?")) {
+          startExamFlow();
+        }
+      }
+    }
+
+    window.addEventListener("beforeunload", () => saveState());
+    init();
+  </script>
+</body>
+</html>
